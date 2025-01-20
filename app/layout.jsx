@@ -8,9 +8,9 @@ import '@/assets/styles/globals.css';
 import 'photoswipe/dist/photoswipe.css';
 
 export const metadata = {
-  title: 'PropertyPulse',
-  description: 'Find The Perfect Rental Property',
-  keywords: 'rental, property, real estate',
+  title: 'JDLab',
+  description: 'Digital Dental Lab Solutions',
+  keywords: 'dental lab, CAD/CAM, 3D printing, dental technology',
 };
 
 const MainLayout = ({ children }) => {
