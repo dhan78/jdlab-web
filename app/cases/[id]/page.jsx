@@ -1,33 +1,46 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import { useParams, useRouter } from "next/navigation"
 import { ArrowLeft, Bell, Download, HelpCircle, Printer, Search, Settings, Upload } from "lucide-react"
 import { useSession } from "next-auth/react"
+import getCase from '@/app/actions/getCase'
 
-export default function NewCase() {
+export default function CaseDetails() {
   const router = useRouter()
+  const params = useParams()
   const { data: session } = useSession()
-  const [orderDetails, setOrderDetails] = useState({
-    patientName: "James Parr",
-    doctor: "Dr. Paula Devins",
-    deliveryAddress: "275 Broad St.",
-    orderId: "119-376-197",
-    material: "Zirconia Monolithic",
-    shades: {
-      base: "A2",
-      gingival: "A4",
-      incisal: "N/A",
-    },
-    preferences: {
-      crownUnderPartial: "No",
-      occlusalContact: "Light",
-      proximalContact: "Medium",
-      occlusalStaining: "Light",
-      anatomicalDesign: "Follow adjacent anatomy",
-      occlusalClearance: "If < 0.5mm, reduce opposing; else, call Dr",
-    },
-  })
+  const [caseDetails, setCaseDetails] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchCaseDetails = async () => {
+      try {
+        const response = await getCase(params.id)
+        if (response.success) {
+          setCaseDetails(response.data)
+        } else {
+          console.error('Failed to fetch case:', response.message)
+        }
+      } catch (error) {
+        console.error('Error:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (params.id) {
+      fetchCaseDetails()
+    }
+  }, [params.id])
+
+  if (loading) {
+    return <div>Loading...</div>
+  }
+
+  if (!caseDetails) {
+    return <div>Case not found</div>
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -73,19 +86,19 @@ export default function NewCase() {
           <div className="col-span-2">
             {/* Patient Info */}
             <div className="bg-white rounded-lg shadow p-6 mb-6">
-              <h1 className="text-2xl font-semibold mb-4">{orderDetails.patientName}</h1>
+              <h1 className="text-2xl font-semibold mb-4">{caseDetails.patientName}</h1>
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <p className="text-sm text-gray-500">Doctor</p>
-                  <p>{orderDetails.doctor}</p>
+                  <p>{caseDetails.doctor}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Delivery address</p>
-                  <p>{orderDetails.deliveryAddress}</p>
+                  <p>{caseDetails.deliveryAddress}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Order ID</p>
-                  <p>{orderDetails.orderId}</p>
+                  <p>{caseDetails.orderId}</p>
                 </div>
               </div>
             </div>
@@ -100,17 +113,33 @@ export default function NewCase() {
                 <div className="flex justify-between mt-4">
                   <div className="text-sm">
                     <p className="font-medium">Placed</p>
-                    <p className="text-gray-500">9:26 AM</p>
+                    <p className="text-gray-500">
+                      {new Date(caseDetails.statusTimeline.placed).toLocaleTimeString()}
+                    </p>
                   </div>
                   <div className="text-sm">
                     <p className="font-medium">Design Preview</p>
-                    <p className="text-gray-500">May 25</p>
+                    <p className="text-gray-500">
+                      {caseDetails.statusTimeline.designPreview 
+                        ? new Date(caseDetails.statusTimeline.designPreview).toLocaleDateString()
+                        : 'Pending'}
+                    </p>
                   </div>
                   <div className="text-sm">
                     <p className="font-medium">Shipment</p>
+                    <p className="text-gray-500">
+                      {caseDetails.statusTimeline.shipment
+                        ? new Date(caseDetails.statusTimeline.shipment).toLocaleDateString()
+                        : 'Pending'}
+                    </p>
                   </div>
                   <div className="text-sm">
                     <p className="font-medium">Delivery</p>
+                    <p className="text-gray-500">
+                      {caseDetails.statusTimeline.delivery
+                        ? new Date(caseDetails.statusTimeline.delivery).toLocaleDateString()
+                        : 'Pending'}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -125,26 +154,26 @@ export default function NewCase() {
                   <div className="space-y-2">
                     <div className="grid grid-cols-2">
                       <p className="text-gray-500">Material</p>
-                      <p>{orderDetails.material}</p>
+                      <p>{caseDetails.material}</p>
                     </div>
                     <div className="grid grid-cols-2">
                       <p className="text-gray-500">Base Shade</p>
-                      <p>{orderDetails.shades.base}</p>
+                      <p>{caseDetails.shades.base}</p>
                     </div>
                     <div className="grid grid-cols-2">
                       <p className="text-gray-500">Gingival</p>
-                      <p>{orderDetails.shades.gingival}</p>
+                      <p>{caseDetails.shades.gingival}</p>
                     </div>
                     <div className="grid grid-cols-2">
                       <p className="text-gray-500">Incisal</p>
-                      <p>{orderDetails.shades.incisal}</p>
+                      <p>{caseDetails.shades.incisal}</p>
                     </div>
                   </div>
                 </div>
                 <div>
                   <h3 className="font-medium mb-2">ORDER PREFERENCES</h3>
                   <div className="space-y-2">
-                    {Object.entries(orderDetails.preferences).map(([key, value]) => (
+                    {Object.entries(caseDetails.preferences).map(([key, value]) => (
                       <div key={key} className="grid grid-cols-2">
                         <p className="text-gray-500">{key.replace(/([A-Z])/g, " $1").trim()}</p>
                         <p>{value}</p>

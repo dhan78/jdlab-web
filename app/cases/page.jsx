@@ -4,10 +4,10 @@ import Pagination from '@/components/Pagination';
 import Case from '@/models/Case';
 import connectDB from '@/config/database';
 
-const CasesPage = async ({ searchParams: { pageSize = 9, page = 1 } }) => {
+const CasesPage = async ({ searchParams: { orderId, pageSize = 9, page = 1 } }) => {
   await connectDB();
   const skip = (page - 1) * pageSize;
-
+  console.log(orderId)
   const total = await Case.countDocuments({});
   const cases = await Case.find({}).skip(skip).limit(pageSize);
 
